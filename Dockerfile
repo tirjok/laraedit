@@ -65,6 +65,8 @@ RUN apt-get install -y php7.1-fpm php7.1-cli php7.1-dev php7.1-gd \
     find /etc/php/7.1/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \; && \
     mkdir -p /run/php/ && chown -Rf www-data.www-data /run/php
 
+RUN apt-get install -y redis-server supervisor
+
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer && \
     composer global require hirak/prestissimo && \
     apt-get -y install ruby2.3 nodejs yarn && \
