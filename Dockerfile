@@ -3,12 +3,7 @@ MAINTAINER Karl Li <killtw@gmail.com>
 
 ENV APP="/var/www/html/app" \
     TERM="xterm" \
-    DEBIAN_FRONTEND="noninteractive" \
-    ES_HOME=/usr/share/elasticsearch-rtf \
-    DEFAULT_ES_USER=elasticsearch \
-    DISCOVER_TRANSPORT_IP=eth0 \
-    DISCOVER_HTTP_IP=eth0 \
-    ES_JAVA_OPTS="-Xms2024m -Xmx2024m"
+    DEBIAN_FRONTEND="noninteractive"
 
 WORKDIR $APP
 
@@ -23,7 +18,6 @@ RUN apt-get update && \
     apt-add-repository ppa:brightbox/ruby-ng -y && \
     apt-key adv --keyserver ha.pool.sks-keyservers.net --recv-keys 5072E1F5 && \
     apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 4F4EA0AAE5267A6C && \
-    sh -c 'echo "deb http://repo.mysql.com/apt/ubuntu/ trusty mysql-5.7" >> /etc/apt/sources.list.d/mysql.list' && \
     curl -s https://packagecloud.io/gpg.key | apt-key add - && \
     curl --silent --location https://deb.nodesource.com/setup_6.x | bash - && \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - && \
@@ -71,20 +65,6 @@ RUN apt-get install -y php7.1-fpm php7.1-cli php7.1-dev php7.1-gd \
     find /etc/php/7.1/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \; && \
     mkdir -p /run/php/ && chown -Rf www-data.www-data /run/php
 
-RUN echo mysql-server mysql-server/root_password password secret | debconf-set-selections && \
-    echo mysql-server mysql-server/root_password_again password secret | debconf-set-selections && \
-    apt-get install -y mysql-server redis-server supervisor
-COPY my.cnf /etc/mysql/my.cnf
-RUN /usr/sbin/mysqld & \
-    sleep 10s && \
-    echo "GRANT ALL ON *.* TO root@'0.0.0.0' IDENTIFIED BY 'secret' WITH GRANT OPTION; CREATE USER 'homestead'@'0.0.0.0' IDENTIFIED BY 'secret'; GRANT ALL ON *.* TO 'homestead'@'0.0.0.0' IDENTIFIED BY 'secret' WITH GRANT OPTION; GRANT ALL ON *.* TO 'homestead'@'%' IDENTIFIED BY 'secret' WITH GRANT OPTION; FLUSH PRIVILEGES; CREATE DATABASE homestead;" | mysql
-
-RUN apt-get install -y default-jre && \
-    cd /usr/share && \
-    git clone git://github.com/medcl/elasticsearch-rtf.git -b 5.0.0 --depth 1 && \
-    adduser --system --shell /bin/sh $DEFAULT_ES_USER
-COPY elasticsearch /elasticsearch
-
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer && \
     composer global require hirak/prestissimo && \
     apt-get -y install ruby2.3 nodejs yarn && \
@@ -102,9 +82,9 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin -
 COPY homestead /etc/nginx/sites-available/
 COPY fastcgi_params /etc/nginx/
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-VOLUME ["/var/cache/nginx", "/var/log/nginx", "/var/lib/mysql", "/var/log/supervisor", "/data","/conf"]
+VOLUME ["/var/cache/nginx", "/var/log/nginx", "/var/log/supervisor"]
 
-EXPOSE 80 443 3306 6379 9200 9300
+EXPOSE 80 443 6379
 
 ENTRYPOINT ["/bin/bash","-c"]
 CMD ["/usr/bin/supervisord"]
