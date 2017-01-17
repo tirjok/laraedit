@@ -71,6 +71,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin -
     composer global require hirak/prestissimo && \
     apt-get -y install ruby2.3 nodejs yarn && \
     yarn global add gulp bower && \
+    gem install bundler --no-ri --no-rdoc && \
     mkdir -p /var/log/supervisor && \
     apt-get remove --purge -y software-properties-common && \
     apt-get autoremove -y && \
